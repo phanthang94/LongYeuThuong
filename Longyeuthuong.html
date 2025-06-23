@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="vi" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lòng Yêu Thương - Khám Phá Tương Tác</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;700&display=swap" rel="stylesheet">
+    
+    <!-- 
+    Chosen Palette: Calm Harmony Neutrals 
+    Application Structure Plan: The SPA is designed as a guided journey. It starts with a 'Giới Thiệu' (Introduction) section to ground the user in the core philosophy of 'Đạo Đức Nhân Bản - Nhân Quả', which is essential context. The main section, 'Khám Phá', encourages non-linear exploration through thematic filters ('Lòng Vị Tha', 'Tình Gia Đình', etc.). This is more engaging than a simple linear list and helps users connect ideas across both volumes. Stories are presented in a grid of cards, opening in a modal to maintain the single-page flow. Finally, a 'Phân Tích' (Analysis) section uses a Chart.js visualization to offer a meta-view of the author's pedagogical approach, showing the thematic shift from the inspirational stories in Volume 1 to the practical lessons in Volume 2. This structure facilitates deeper understanding by moving from foundational theory to thematic exploration and finally to analytical insight.
+    Visualization & Content Choices: 
+    - Report Info: The core content is narrative stories and philosophical teachings from the two books. Goal: Make these teachings accessible and explorable. Viz/Presentation Method: Interactive grid with modals for stories. Interaction: Users filter stories by theme. Justification: This promotes engagement and helps users grasp the key virtues being taught.
+    - Report Info: The structural difference between the two volumes (Volume 1: inspirational, Volume 2: practical). Goal: Visually represent this shift. Viz/Presentation Method: A horizontal bar chart created with Chart.js. Interaction: Tooltips on hover provide exact counts. Justification: This offers a data-driven insight into the narrative structure, a unique way to analyze a text-based report and fulfills the visualization requirement without numerical data in the source. Library/Method: Chart.js/Canvas.
+    CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. 
+    -->
+
+    <style>
+        :root {
+            --bg-main: #fdfdfc;
+            --bg-container: #f4f1ea;
+            --text-primary: #3d3a36;
+            --text-secondary: #5c544b;
+            --accent: #869684;
+            --accent-dark: #6a7a68;
+            --border-color: #e2ddd7;
+        }
+        body {
+            background-color: var(--bg-main);
+            color: var(--text-primary);
+            font-family: 'Be Vietnam Pro', sans-serif;
+        }
+        .text-gradient {
+            background: linear-gradient(45deg, var(--accent), var(--accent-dark));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .btn-accent {
+            background-color: var(--accent);
+            color: white;
+            transition: background-color 0.3s ease;
+        }
+        .btn-accent:hover {
+            background-color: var(--accent-dark);
+        }
+        .btn-filter {
+            background-color: var(--bg-container);
+            color: var(--text-secondary);
+            border: 1px solid var(--border-color);
+            transition: all 0.3s ease;
+        }
+        .btn-filter:hover, .btn-filter.active {
+            background-color: var(--accent);
+            color: white;
+            border-color: var(--accent);
+        }
+        .story-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .story-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+        .modal-backdrop {
+            background-color: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(5px);
+        }
+        .modal-content {
+            background-color: var(--bg-main);
+            max-height: 85vh;
+            animation: slideUp 0.4s ease-out;
+        }
+        @keyframes slideUp {
+            from { transform: translateY(30px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 400px;
+            max-height: 50vh;
+            background-color: white;
+            padding: 1rem;
+            border-radius: 0.75rem;
+            border: 1px solid var(--border-color);
+        }
+        @media (max-width: 768px) {
+            .chart-container {
+                height: 350px;
+            }
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <header id="header" class="bg-white/80 backdrop-blur-lg sticky top-0 z-40 border-b border-gray-200/80">
+        <div class="container mx-auto px-4">
+            <div class="flex justify-between items-center py-4">
+                <h1 class="text-2xl font-bold text-gradient">Lòng Yêu Thương</h1>
+                <nav class="hidden md:flex items-center space-x-6 text-base font-medium">
+                    <a href="#gioi-thieu" class="text-gray-600 hover:text-gray-900 transition-colors">Giới Thiệu</a>
+                    <a href="#kham-pha" class="text-gray-600 hover:text-gray-900 transition-colors">Khám Phá</a>
+                    <a href="#phan-tich" class="text-gray-600 hover:text-ray-900 transition-colors">Phân Tích</a>
+                </nav>
+                <a href="#kham-pha" class="btn-accent px-4 py-2 rounded-full hidden md:block">Bắt đầu đọc</a>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <section id="gioi-thieu" class="py-16 md:py-24">
+            <div class="container mx-auto px-4 text-center">
+                <p class="font-semibold text-lg text-gray-600 mb-2">Trưởng lão Thích Thông Lạc</p>
+                <h2 class="text-4xl md:text-5xl font-bold tracking-tighter mb-6">Đạo Đức Nhân Bản - Nhân Quả</h2>
+                <p class="max-w-3xl mx-auto text-lg text-gray-700 leading-relaxed mb-8">
+                    Nền tảng của bộ sách "Lòng Yêu Thương" là triết lý Đạo Đức Nhân Bản - Nhân Quả, với nguyên tắc cốt lõi: "Sống không làm khổ mình, khổ người và khổ chúng sanh". Đây không chỉ là một hệ thống luân lý, mà là một pháp hành cụ thể để tìm thấy sự an lạc, thanh thản ngay trong cuộc sống này thông qua những hành động yêu thương chân thật, không vị kỷ.
+                </p>
+                <div class="grid md:grid-cols-3 gap-8 max-w-4xl mx-auto text-left">
+                    <div class="bg-white p-6 rounded-lg border border-gray-200">
+                        <h3 class="font-bold text-xl mb-2">Không Làm Khổ Mình</h3>
+                        <p class="text-gray-600">Là giữ cho tâm không bị các cảm xúc tiêu cực như giận hờn, lo âu, sợ hãi chiếm ngự, đạt đến trạng thái tâm bất động, thanh thản.</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-lg border border-gray-200">
+                        <h3 class="font-bold text-xl mb-2">Không Làm Khổ Người</h3>
+                        <p class="text-gray-600">Là thể hiện lòng yêu thương qua hành động, lời nói, suy nghĩ thiện lành, luôn đi cùng sự cung kính và tôn trọng người khác.</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-lg border border-gray-200">
+                        <h3 class="font-bold text-xl mb-2">Không Làm Khổ Chúng Sanh</h3>
+                        <p class="text-gray-600">Là thực hành Đức Hiếu Sinh, tôn trọng sự sống của muôn loài, dù là nhỏ bé nhất, thể hiện lòng từ bi bình đẳng.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="kham-pha" class="py-16 md:py-24" style="background-color: var(--bg-container);">
+            <div class="container mx-auto px-4">
+                <div class="text-center mb-12">
+                    <h2 class="text-4xl md:text-5xl font-bold tracking-tighter mb-4">Khám Phá Các Câu Chuyện</h2>
+                    <p class="max-w-2xl mx-auto text-lg text-gray-700 leading-relaxed">
+                        Lọc các câu chuyện theo từng chủ đề đạo đức để suy ngẫm và chiêm nghiệm sâu sắc hơn về các khía cạnh của lòng yêu thương.
+                    </p>
+                </div>
+                <div id="theme-filters" class="flex flex-wrap justify-center gap-2 md:gap-4 mb-12">
+                    <button class="btn-filter px-4 py-2 rounded-full active" data-filter="all">Tất Cả</button>
+                    <button class="btn-filter px-4 py-2 rounded-full" data-filter="hy-sinh">Lòng Vị Tha & Hy Sinh</button>
+                    <button class="btn-filter px-4 py-2 rounded-full" data-filter="gia-dinh">Tình Cảm Gia Đình</button>
+                    <button class="btn-filter px-4 py-2 rounded-full" data-filter="hieu-sinh">Đức Hiếu Sinh</button>
+                    <button class="btn-filter px-4 py-2 rounded-full" data-filter="ban-be">Tình Bạn & Tổ Quốc</button>
+                    <button class="btn-filter px-4 py-2 rounded-full" data-filter="bai-hoc">Bài Học & Nhân Quả</button>
+                </div>
+
+                <div id="stories-grid" class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                </div>
+            </div>
+        </section>
+        
+        <section id="phan-tich" class="py-16 md:py-24">
+            <div class="container mx-auto px-4">
+                <div class="text-center mb-12">
+                    <h2 class="text-4xl md:text-5xl font-bold tracking-tighter mb-4">Phân Tích Cấu Trúc Sách</h2>
+                    <p class="max-w-3xl mx-auto text-lg text-gray-700 leading-relaxed">
+                        Biểu đồ này trực quan hóa sự khác biệt về trọng tâm chủ đề giữa hai tập sách. Tập 1 tập trung vào những câu chuyện truyền cảm hứng, hào hùng về sự hy sinh. Trong khi đó, Tập 2 đi sâu vào các bài học thực tế, những tình huống đời thường để rèn luyện đạo đức, nhấn mạnh vào hệ quả của lòng ích kỷ và giá trị của những hành động nhỏ.
+                    </p>
+                </div>
+                <div class="chart-container">
+                    <canvas id="themeChart"></canvas>
+                </div>
+            </div>
+        </section>
+
+    </main>
+    
+    <footer class="border-t border-gray-200 mt-12">
+        <div class="container mx-auto px-4 py-8 text-center text-gray-500">
+            <p>Trang web tương tác dựa trên bộ sách "Lòng Yêu Thương" của Trưởng lão Thích Thông Lạc.</p>
+            <p>Sách gốc được phát hành bởi Tu viện Chơn Như. Chỉ kính biếu, không bán.</p>
+        </div>
+    </footer>
+
+    <div id="story-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 modal-backdrop hidden">
+        <div class="modal-content w-full max-w-3xl rounded-lg shadow-xl overflow-hidden">
+            <div class="flex justify-between items-center p-4 border-b border-gray-200">
+                <h3 id="modal-title" class="text-2xl font-bold"></h3>
+                <button id="close-modal-btn" class="text-gray-400 hover:text-gray-800 transition-colors text-3xl">&times;</button>
+            </div>
+            <div id="modal-body" class="p-6 md:p-8 overflow-y-auto text-gray-700 leading-relaxed prose max-w-none">
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const storiesData = [
+            { id: 1, title: 'Nơi Trở Về', volume: 1, theme: 'hy-sinh',
+              content: `<h4>Câu chuyện:</h4><p>Trong một trận hỏa hoạn, một cô bé mồ côi được cứu sống. Sau đó, nhiều gia đình giàu có muốn nhận nuôi cô. Nhưng cô bé chỉ chọn người đàn ông có đôi tay bị bỏng nặng biến dạng. Khi được hỏi tại sao, cô bé trả lời: "Đôi tay đó đã cứu cháu ra khỏi ngọn lửa".</p><h4>Bài học:</h4><p>Lòng yêu thương được thể hiện qua hành động hy sinh có giá trị hơn mọi của cải vật chất. Đó là nơi nương tựa vững chắc và ấm áp nhất của tâm hồn.</p>` },
+            { id: 2, title: 'Lòng yêu thương của Carolyn', volume: 1, theme: 'hy-sinh',
+              content: `<h4>Câu chuyện:</h4><p>Nữ văn sĩ Carolyn đã tìm được ngôi nhà mơ ước của mình. Nhưng khi biết gia đình cô bé Jenny, người từng sống ở đó, đang gặp khó khăn và luôn nhớ về ngôi nhà cũ, Carolyn đã quyết định tặng lại ngôi nhà cho gia đình Jenny, từ bỏ đi ước mơ lớn của đời mình.</p><h4>Bài học:</h4><p>Lòng yêu thương chân thật là sự cho đi, sẵn sàng hy sinh cả những gì mình trân quý nhất để mang lại hạnh phúc cho người khác một cách trọn vẹn.</p>` },
+            { id: 3, title: 'Lòng yêu thương loài sâu bọ', volume: 1, theme: 'hieu-sinh',
+              content: `<h4>Câu chuyện:</h4><p>Cậu bé Brian đi học muộn. Lý do là vì trên đường đi, cậu thấy những con sâu đang bò trên vỉa hè và sợ chúng bị người khác giẫm chết. Cậu đã cẩn thận nhặt từng con sâu đặt vào bãi cỏ an toàn.</p><h4>Bài học:</h4><p>Đây là biểu hiện cao đẹp của Đức Hiếu Sinh. Lòng yêu thương đích thực không có giới hạn, nó mở rộng đến cả những sinh vật nhỏ bé nhất. Tôn trọng mọi sự sống là một phẩm chất đạo đức nền tảng.</p>` },
+            { id: 4, title: 'Lòng yêu thương của Rôbetti', volume: 1, theme: 'hy-sinh',
+              content: `<h4>Câu chuyện:</h4><p>Thấy một em bé sắp bị xe ngựa đâm, cậu học sinh Rôbetti đã không ngần ngại lao ra, đẩy em bé vào lề và chấp nhận bị bánh xe nghiền nát bàn chân mình, chịu thương tật suốt đời.</p><h4>Bài học:</h4><p>Lòng yêu thương có thể tạo ra lòng dũng cảm phi thường, khiến con người sẵn sàng hy sinh thân mình để cứu mạng người khác mà không một chút do dự.</p>` },
+            { id: 5, title: 'Lòng yêu thương của Mario', volume: 1, theme: 'hy-sinh',
+              content: `<h4>Câu chuyện:</h4><p>Trên một con tàu sắp chìm, cậu bé mồ côi Mario đã nhường chỗ sống duy nhất trên xuồng cứu sinh cho bạn mình là Giulietta. Lý do Mario đưa ra là vì Giulietta còn có cha mẹ, gia đình đang chờ đợi, còn cậu thì không có ai.</p><h4>Bài học:</h4><p>Sự hy sinh cao cả nhất là nhường đi chính mạng sống của mình. Lòng vị tha vĩ đại có thể được thúc đẩy bởi tình bạn và sự thấu cảm sâu sắc cho hoàn cảnh của người khác.</p>` },
+            { id: 6, title: 'Lòng yêu thương Tổ quốc', volume: 1, theme: 'ban-be',
+              content: `<h4>Câu chuyện:</h4><p>Một cậu bé người Ý thà chịu đói chứ không nhận tiền bố thí từ những người ngoại quốc đang lăng mạ đất nước mình. Một cậu bé khác đã hy sinh mạng sống khi làm trinh sát cho quân đội trong cuộc chiến bảo vệ quê hương.</p><h4>Bài học:</h4><p>Lòng yêu nước không phải là lời nói suông. Nó thể hiện qua việc bảo vệ danh dự dân tộc và sẵn sàng hy sinh vì non sông. Mỗi công dân cần sống có đạo đức để không làm sỉ nhục Tổ quốc.</p>` },
+            { id: 7, title: 'Bá Nha và Tử Kỳ', volume: 1, theme: 'ban-be',
+              content: `<h4>Câu chuyện:</h4><p>Nhạc sư Bá Nha nổi tiếng với tài chơi đàn, nhưng không ai thực sự hiểu được tiếng đàn của ông. Chỉ có người tiều phu Tử Kỳ là có thể cảm nhận trọn vẹn tâm tư ông gửi gắm qua âm nhạc. Khi Tử Kỳ qua đời, Bá Nha đã đập vỡ cây đàn vì cho rằng tri kỷ không còn, tiếng đàn cũng trở nên vô nghĩa.</p><h4>Bài học:</h4><p>Tình bạn tri âm, tri kỷ là sự thấu hiểu sâu sắc về tâm hồn, vượt lên trên mọi khác biệt về địa vị, giàu nghèo. Đó là một dạng tình yêu thương vô cùng quý giá.</p>` },
+            { id: 8, title: 'Thiên Đàng & Địa Ngục', volume: 2, theme: 'bai-hoc',
+              content: `<h4>Câu chuyện:</h4><p>Một người được dẫn đi xem Địa Ngục và Thiên Đàng. Ở cả hai nơi, mọi người đều ngồi trước bàn tiệc thịnh soạn với những đôi đũa dài một mét. Ở Địa Ngục, ai cũng đói khổ vì đôi đũa quá dài không thể tự gắp thức ăn cho mình. Ở Thiên Đàng, ai cũng no đủ, vui vẻ vì họ dùng đôi đũa dài đó để gắp thức ăn cho người đối diện.</p><h4>Bài học:</h4><p>Thiên đàng và địa ngục không ở đâu xa mà do chính cách hành xử của con người tạo ra. Lòng ích kỷ chỉ biết đến mình sẽ dẫn đến khổ đau (Địa Ngục). Lòng vị tha, biết nghĩ cho người khác sẽ tạo ra hạnh phúc (Thiên Đàng).</p>` },
+            { id: 9, title: 'Vết Thẹo', volume: 2, theme: 'gia-dinh',
+              content: `<h4>Câu chuyện:</h4><p>Một cậu bé luôn cảm thấy xấu hổ vì vết sẹo lớn trên mặt mẹ mình. Một ngày, cậu hỏi mẹ về vết sẹo. Người mẹ kể rằng, khi cậu còn nhỏ, nhà bị cháy, bà đã xông vào biển lửa cứu cậu. Một thanh gỗ cháy rơi xuống, bà đã lấy thân mình che cho con và khuôn mặt bà bị bỏng nặng từ đó.</p><h4>Bài học:</h4><p>Lòng yêu thương của mẹ là sự hy sinh vô bờ bến. Vẻ đẹp tâm hồn và sự hy sinh cao cả đáng trân trọng hơn vạn lần vẻ đẹp hình thức bên ngoài.</p>` },
+            { id: 10, title: 'Trở Về', volume: 2, theme: 'bai-hoc',
+              content: `<h4>Câu chuyện:</h4><p>Một người lính gọi điện cho cha mẹ, báo tin anh sắp trở về nhưng có đi cùng một người bạn bị thương tật nặng. Cha mẹ anh đã từ chối, nói rằng họ không muốn có một gánh nặng trong nhà. Vài ngày sau, họ nhận được tin con trai mình đã tự tử. Tại nhà xác, họ bàng hoàng nhận ra chính con trai mình là người bị tàn tật mà họ đã từ chối cưu mang.</p><h4>Bài học:</h4><p>Lòng yêu thương ích kỷ, hẹp hòi, phân biệt đối xử có thể gây ra những bi kịch đau lòng không thể cứu vãn. Đây là hậu quả tàn khốc của tình thương thiếu sự cung kính và tôn trọng, thiếu lòng từ bi bình đẳng.</p>` },
+            { id: 11, title: 'Một Ly Sữa', volume: 2, theme: 'bai-hoc',
+              content: `<h4>Câu chuyện:</h4><p>Một cậu bé bán hàng rong nghèo đói, khát nước, đã gõ cửa một nhà xin ly nước nhưng được một cô gái trẻ cho cả một ly sữa lớn. Nhiều năm sau, cô gái đó bị bệnh nặng và được điều trị bởi bác sĩ Howard Kelly. Khi nhận hóa đơn viện phí, cô thấy dòng chữ: "Đã thanh toán đủ bằng một ly sữa". Bác sĩ Kelly chính là cậu bé năm xưa.</p><h4>Bài học:</h4><p>Nhân quả luôn hiện hữu. Lòng tốt không bao giờ mất đi, nó sẽ được đền đáp một cách xứng đáng vào lúc ta không ngờ tới. Cứ cho đi rồi sẽ được nhận lại.</p>`},
+            { id: 12, title: 'Nơi Có Chỗ Mẹ Nằm', volume: 2, theme: 'gia-dinh',
+              content: `<h4>Câu chuyện:</h4><p>Một bà mẹ già bệnh nặng nằm liệt giường. Người em trai tận tụy chăm sóc mẹ từng li từng tí, không quản ngại khó khăn, vất vả. Trong khi đó, người anh trai thành đạt ở thành phố lại vô tâm, ích kỷ, chỉ thỉnh thoảng gửi chút tiền về và coi đó là đủ. Với người em, nơi có mẹ nằm là nơi thiêng liêng nhất.</p><h4>Bài học:</h4><p>Lòng hiếu thảo chân chính phải được thể hiện qua hành động chăm sóc cụ thể, bằng sự hy sinh và tình yêu thương thực sự, chứ không phải bằng vật chất hay lời nói suông.</p>`},
+            { id: 13, title: 'Cây Bút Máy', volume: 2, theme: 'bai-hoc',
+              content: `<h4>Câu chuyện:</h4><p>Một học sinh trong lớp bị mất cây bút máy, và mọi nghi ngờ đổ dồn về một cậu bé nghèo. Cô giáo đã khéo léo yêu cầu cả lớp úp mặt xuống bàn và cô sẽ đi tìm trong cặp từng em. Cô tìm thấy cây bút trong cặp cậu bé bị nghi ngờ, nhưng cô không vạch trần mà tiếp tục đi hết lớp, sau đó tuyên bố không tìm thấy và sẽ mua đền cây bút khác. Hành động đó đã cứu vãn danh dự và tương lai cho một đứa trẻ lầm lỗi.</p><h4>Bài học:</h4><p>Lòng yêu thương trong giáo dục cần sự tinh tế và trí tuệ. Giúp người khác sửa sai mà không làm họ tổn thương, cho họ cơ hội làm lại cuộc đời là biểu hiện cao nhất của lòng vị tha.</p>`},
+            { id: 14, title: 'Con "Quỷ" Gù', volume: 2, theme: 'hy-sinh',
+              content: `<h4>Câu chuyện:</h4><p>Một anh thợ máy có ngoại hình xấu xí, lưng gù, thường bị mọi người trêu chọc là "con quỷ". Đặc biệt, một cô gái xinh đẹp trong xưởng luôn tìm cách hành hạ, sỉ nhục anh. Một hôm, cô gái bất cẩn bị máy cuốn tóc vào. Anh thợ máy đã không ngần ngại đưa cả cánh tay mình vào bánh răng để chặn máy lại, cứu sống cô gái và chấp nhận mất đi cánh tay.</p><h4>Bài học:</h4><p>Đừng bao giờ đánh giá con người qua vẻ bề ngoài. Vẻ đẹp thật sự nằm ở tâm hồn và lòng nhân ái. Sự hy sinh của anh thợ máy đã chứng minh một trái tim vàng ẩn sau một ngoại hình không may mắn.</p>`},
+        ];
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const storiesGrid = document.getElementById('stories-grid');
+            const themeFilters = document.getElementById('theme-filters');
+            const modal = document.getElementById('story-modal');
+            const modalTitle = document.getElementById('modal-title');
+            const modalBody = document.getElementById('modal-body');
+            const closeModalBtn = document.getElementById('close-modal-btn');
+
+            function renderStories(filter = 'all') {
+                storiesGrid.innerHTML = '';
+                const filteredStories = storiesData.filter(story => filter === 'all' || story.theme === filter);
+                
+                if (filteredStories.length === 0) {
+                    storiesGrid.innerHTML = `<p class="text-center text-gray-500 col-span-full">Không có câu chuyện nào cho chủ đề này.</p>`;
+                    return;
+                }
+
+                filteredStories.forEach(story => {
+                    const card = document.createElement('div');
+                    card.className = 'story-card rounded-lg p-6 cursor-pointer flex flex-col';
+                    card.dataset.id = story.id;
+                    card.innerHTML = `
+                        <div class="flex-grow">
+                            <span class="inline-block bg-green-100 text-green-800 text-xs font-semibold px-2.5 py-0.5 rounded-full mb-2">Tập ${story.volume}</span>
+                            <h3 class="font-bold text-xl mb-2">${story.title}</h3>
+                            <p class="text-gray-600 text-sm">${story.content.match(/<h4>Bài học:<\/h4><p>(.*?)<\/p>/)[1]}</p>
+                        </div>
+                        <div class="mt-4 text-right">
+                             <span class="text-sm font-semibold" style="color:var(--accent-dark);">Đọc thêm &rarr;</span>
+                        </div>
+                    `;
+                    storiesGrid.appendChild(card);
+                });
+            }
+
+            function openModal(storyId) {
+                const story = storiesData.find(s => s.id == storyId);
+                if (story) {
+                    modalTitle.textContent = story.title;
+                    modalBody.innerHTML = story.content;
+                    modal.classList.remove('hidden');
+                }
+            }
+
+            function closeModal() {
+                modal.classList.add('hidden');
+            }
+
+            themeFilters.addEventListener('click', (e) => {
+                if (e.target.tagName === 'BUTTON') {
+                    document.querySelector('.btn-filter.active').classList.remove('active');
+                    e.target.classList.add('active');
+                    const filter = e.target.dataset.filter;
+                    renderStories(filter);
+                }
+            });
+
+            storiesGrid.addEventListener('click', (e) => {
+                const card = e.target.closest('.story-card');
+                if (card) {
+                    openModal(card.dataset.id);
+                }
+            });
+
+            closeModalBtn.addEventListener('click', closeModal);
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    closeModal();
+                }
+            });
+
+            function createThemeChart() {
+                const ctx = document.getElementById('themeChart').getContext('2d');
+                const themes = {
+                    'hy-sinh': 'Lòng Vị Tha & Hy Sinh',
+                    'gia-dinh': 'Tình Cảm Gia Đình',
+                    'hieu-sinh': 'Đức Hiếu Sinh',
+                    'ban-be': 'Tình Bạn & Tổ Quốc',
+                    'bai-hoc': 'Bài Học & Nhân Quả'
+                };
+
+                const labels = Object.values(themes);
+                const themeKeys = Object.keys(themes);
+                
+                const dataVol1 = themeKeys.map(theme => storiesData.filter(s => s.volume === 1 && s.theme === theme).length);
+                const dataVol2 = themeKeys.map(theme => storiesData.filter(s => s.volume === 2 && s.theme === theme).length);
+
+                new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: labels,
+                        datasets: [
+                            {
+                                label: 'Tập 1 - Truyền Cảm Hứng',
+                                data: dataVol1,
+                                backgroundColor: 'rgba(134, 150, 132, 0.6)',
+                                borderColor: 'rgba(134, 150, 132, 1)',
+                                borderWidth: 1
+                            },
+                            {
+                                label: 'Tập 2 - Bài Học Thực Tiễn',
+                                data: dataVol2,
+                                backgroundColor: 'rgba(92, 84, 75, 0.6)',
+                                borderColor: 'rgba(92, 84, 75, 1)',
+                                borderWidth: 1
+                            }
+                        ]
+                    },
+                    options: {
+                        indexAxis: 'y',
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            title: {
+                                display: true,
+                                text: 'Số Lượng Câu Chuyện Theo Chủ Đề Chính',
+                                font: { size: 16 }
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        return `${context.dataset.label}: ${context.raw} câu chuyện`;
+                                    }
+                                }
+                            }
+                        },
+                        scales: {
+                            x: {
+                                stacked: true,
+                                title: {
+                                    display: true,
+                                    text: 'Số lượng câu chuyện'
+                                }
+                            },
+                            y: {
+                                stacked: true
+                            }
+                        }
+                    }
+                });
+            }
+
+            renderStories();
+            createThemeChart();
+        });
+    </script>
+
+</body>
+</html>
